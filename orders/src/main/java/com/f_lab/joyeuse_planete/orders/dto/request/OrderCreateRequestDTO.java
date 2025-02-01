@@ -65,7 +65,7 @@ public class OrderCreateRequestDTO {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  static class PaymentInformation {
+  public static class PaymentInformation {
 
     @JsonProperty("card_number")
     private String cardNumber;

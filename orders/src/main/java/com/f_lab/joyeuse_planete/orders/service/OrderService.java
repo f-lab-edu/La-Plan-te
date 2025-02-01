@@ -21,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -51,9 +50,14 @@ public class OrderService {
     Order order = request.toEntity();
     try {
       orderRepository.save(order);
-    } catch (Exception e) {
+
+    } catch (JoyeusePlaneteApplicationException e) {
       LogUtil.exception("OrderService.createFoodOrder", e);
       throw e;
+
+    } catch (Exception e) {
+      LogUtil.exception("OrderService.createFoodOrder", e);
+      throw new RuntimeException(e);
     }
 
     sendKafkaOrderCreatedEvent(request, order);
@@ -65,7 +69,13 @@ public class OrderService {
   public void sendKafkaOrderCreatedEvent(OrderCreateRequestDTO request, Order order) {
     try {
       kafkaService.sendKafkaEvent(ORDER_CREATED_EVENT, request.toEvent(order.getId()));
-    } catch (Exception e) {
+
+    } catch(JoyeusePlaneteApplicationException e) {
+      LogUtil.exception("OrderService.sendKafkaOrderCreatedEvent", e);
+      throw e;
+
+    } catch(Exception e) {
+      LogUtil.exception("OrderService.sendKafkaOrderCreatedEvent", e);
       throw new RuntimeException(e);
     }
   }
