@@ -14,6 +14,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 
@@ -27,6 +29,8 @@ import static jakarta.persistence.GenerationType.IDENTITY;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "foods")
+@SQLRestriction("is_deleted IS false")
+@SQLDelete(sql = "UPDATE foods SET is_deleted = true WHERE id = ?")
 public class Food extends BaseEntity {
 
   @Id

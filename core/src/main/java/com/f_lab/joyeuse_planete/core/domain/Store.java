@@ -7,18 +7,23 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
-import static lombok.AccessLevel.PROTECTED;
 
 @Entity
-@Getter
-@NoArgsConstructor(access = PROTECTED)
+@SuperBuilder
+@Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "stores")
 public class Store extends BaseTimeEntity {
 
@@ -28,6 +33,7 @@ public class Store extends BaseTimeEntity {
 
   private String name;
 
+  @Builder.Default
   @OneToMany(mappedBy = "store")
   private List<Food> foods = new ArrayList<>();
 }
