@@ -8,27 +8,25 @@ import org.apache.kafka.common.KafkaException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import static com.f_lab.joyeuse_planete.core.util.time.TimeConstantsString.ONE_SECOND;
 
 @Slf4j
 @Aspect
 @Component
 public class KafkaRetryAspect {
 
-  @Value("${kafka.lock.max.retry:3}")
-  private int MAX_RETRY;
-  private static final int STOP_INTERVAL = 1000;
+  private static final int STOP_INTERVAL = Integer.parseInt(ONE_SECOND);
 
-  @Around("@annotation(com.f_lab.joyeuse_planete.core.kafka.aspect.KafkaRetry)")
-  public Object kafkaRetry(ProceedingJoinPoint joinPoint) {
-    int attempts = 0;
+  @Around("@annotation(retry)")
+  public Object kafkaRetry(ProceedingJoinPoint joinPoint, KafkaRetry retry) {
 
-    while (attempts < MAX_RETRY) {
+    for (int attempts = 0; attempts < retry.value(); attempts++) {
       try {
         return joinPoint.proceed();
       } catch (KafkaException e) {
-        LogUtil.retry(++attempts, joinPoint.getSignature().toString());
+        LogUtil.retry(attempts, retry.value(), joinPoint.getSignature().toString());
 
         try {
           Thread.sleep(STOP_INTERVAL);
@@ -44,5 +42,4 @@ public class KafkaRetryAspect {
 
     throw new JoyeusePlaneteApplicationException(ErrorCode.KAFKA_RETRY_FAIL_EXCEPTION);
   }
-
 }

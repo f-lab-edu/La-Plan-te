@@ -10,28 +10,24 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Aspect
 @Component
 public class LockRetryAspect {
-
-  @Value("${lock.max.retry:2}")
-  private int MAX_RETRY;
   private static final int FIRST_WAIT_INTERVAL = Integer.parseInt(TimeConstantsString.ONE_SECOND);
   private static final int MULTIPLIER = 2;
 
-  @Around("@annotation(com.f_lab.joyeuse_planete.core.aspect.RetryOnLockFailure)")
-  public Object lockRetry(ProceedingJoinPoint joinPoint) {
-    int attempts = 0, stopInterval = FIRST_WAIT_INTERVAL;
+  @Around("@annotation(retry)")
+  public Object lockRetry(ProceedingJoinPoint joinPoint, RetryOnLockFailure retry) {
+    int stopInterval = FIRST_WAIT_INTERVAL;
 
-    while (attempts < MAX_RETRY) {
+    for (int attempts = 0; attempts < retry.value(); attempts++) {
       try {
         return joinPoint.proceed();
       } catch (PessimisticLockException | LockTimeoutException e) {
-        LogUtil.retry(++attempts, joinPoint.getSignature().toString());
+        LogUtil.retry(attempts, retry.value(), joinPoint.getSignature().toString());
 
         // 재시도 전 잠시 멈추고 다시 시작
         // 각 시도 마다 WAIT_INTERVAL 이 MULTIPLIER 에 상응하는 값을 지수적으로 늘어납니다 (backoff)
